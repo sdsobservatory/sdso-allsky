@@ -6,9 +6,11 @@ from apscheduler.triggers.interval import IntervalTrigger
 from app.config import settings
 from app.timelapse import Timelapse
 import app.cameras as cameras
+import app.metrics
+from prometheus_fastapi_instrumentator import Instrumentator
 
 try:
-    # Get the camera now before fastapi starts so we can exit
+    # Get the camera now before fastapi starts, so we can exit
     # early if the configuration is incorrect.
     camera = getattr(cameras, settings.camera)()
 except:
@@ -36,6 +38,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+Instrumentator().instrument(app).expose(app)
 
 
 @app.get("/")
@@ -49,4 +52,3 @@ async def image(request: Request):
     return Response(timelapse.jpeg_image_data,
                     media_type='image/jpeg',
                     headers={'content-length': str(len(timelapse.jpeg_image_data))})
-

@@ -13,6 +13,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from PIL import ImageDraw
 from PIL.Image import Image
+import app.metrics as app_metrics
 
 
 class Timelapse:
@@ -44,6 +45,10 @@ class Timelapse:
         green_data = (green_pixels(image) - self.camera.get_bias_median(exposure_us, gain)) >> self.camera.shift
         median = int(np.median(green_data))
         e_per_sec = median * self.camera.get_e_per_adu(gain) / exposure_sec
+
+        app_metrics.TIMELAPSE_EXPOSURE_METRIC.set(exposure_sec)
+        app_metrics.TIMELAPSE_GAIN_METRIC.set(gain)
+        app_metrics.TIMELAPSE_E_PER_SEC_METRIC.set(e_per_sec)
 
         # append to prediction window, remove the oldest entries
         self.window_e_per_sec.append(e_per_sec)
@@ -90,6 +95,10 @@ class Timelapse:
 
         # 60s upper limit to prevent runaway exposure
         exposure_us = min(exposure_us, int(60e6))
+
+        app_metrics.TIMELAPSE_EXPOSURE_NEXT_METRIC.set(exposure_us / 1e6)
+        app_metrics.TIMELAPSE_GAIN_NEXT_METRIC.set(gain)
+        app_metrics.TIMELAPSE_E_PER_SEC_NEXT_METRIC.set(next_e_per_sec)
 
         return exposure_us, gain
 
