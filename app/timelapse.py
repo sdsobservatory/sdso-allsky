@@ -33,10 +33,11 @@ class Timelapse:
             self.data_dir.mkdir(parents=True, exist_ok=True)
 
     def _clamp_exposure(self, exposure_us: int) -> int:
-        return max(self.camera.exposure_min, min(self.camera.exposure_max, exposure_us))
+        exposure_us = max(self.camera.exposure_min, min(self.camera.exposure_max, exposure_us))
+        return min(exposure_us, int(settings.max_exposure_sec * 1e6))
 
-    def _is_clipped(self, exposure_us: int) -> bool:
-        return exposure_us == self.camera.exposure_min
+    def _is_clipped_low(self, exposure_us: int) -> bool:
+        return exposure_us <= self.camera.exposure_min
 
     def _compute_exposure_us_and_gain(self, image: fits.ImageHDU) -> Tuple[int, int]:
         exposure_sec = float(image.header['EXPOSURE'])
@@ -210,7 +211,7 @@ class Timelapse:
         # Determine a starting exposure
         while True:
             exposure_us = self._clamp_exposure(exposure_us)
-            if self._is_clipped(exposure_us):
+            if self._is_clipped_low(exposure_us):
                 if gain == self.camera.gain_night:
                     gain = self.camera.gain_day
                     continue
