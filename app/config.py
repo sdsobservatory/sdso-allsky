@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     overlay_title: str | None = None
     overlay_latitude: str | None = None
     overlay_longitude: str | None = None
+    max_exposure_sec: int = 55
 
 
 settings = Settings()

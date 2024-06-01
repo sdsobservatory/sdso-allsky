@@ -93,8 +93,8 @@ class Timelapse:
             int((native_target_median * self.camera.get_e_per_adu(gain) / next_e_per_sec) * 1e6)
         )
 
-        # 60s upper limit to prevent runaway exposure
-        exposure_us = min(exposure_us, int(60e6))
+        # upper limit to prevent runaway exposure
+        exposure_us = min(exposure_us, int(settings.max_exposure_sec * 1e6))
 
         app_metrics.TIMELAPSE_EXPOSURE_NEXT_METRIC.set(exposure_us / 1e6)
         app_metrics.TIMELAPSE_GAIN_NEXT_METRIC.set(gain)
